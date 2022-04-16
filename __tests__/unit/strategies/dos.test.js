@@ -1,5 +1,5 @@
 import { when } from 'jest-when'
-import { EXIT_STRATEGIES, INSTRUMENTS } from '../../../lib/constants'
+import { EXIT_STRATEGIES, INSTRUMENTS, BROKER } from '../../../lib/constants'
 import directionalOptionSelling from '../../../lib/strategies/directionalOptionSelling'
 import { ms, syncGetKiteInstance } from '../../../lib/utils'
 
@@ -14,7 +14,7 @@ const MockAdapter = require('axios-mock-adapter')
 const mockAxios = new MockAdapter(axios, { onNoMatch: 'passthrough' })
 
 test('it should work without hedge order', async () => {
-  let kite = syncGetKiteInstance(user)
+  let kite = syncGetKiteInstance(user, BROKER.KITE)
 
   expect(kite).toBeDefined()
 
@@ -44,7 +44,7 @@ test('it should work without hedge order', async () => {
     .mockResolvedValue([
       {
         order_id: 'original order',
-        status: kite.STATUS_COMPLETE,
+        status: kite.kc.STATUS_COMPLETE,
         variety: 'regular',
         exchange: 'NFO',
         tradingsymbol: 'BANKNIFTY2172234500PE',

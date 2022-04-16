@@ -4,6 +4,7 @@ import { SignalXUser } from '../../types/misc'
 import { ATM_STRADDLE_TRADE } from '../../types/trade'
 
 import {
+  BROKER,
   EXPIRY_TYPE,
   INSTRUMENT_DETAILS,
   INSTRUMENT_PROPERTIES,
@@ -79,7 +80,7 @@ export async function getATMStraddle (
      * and then eventually if the timer expires, then decide basis `takeTradeIrrespectiveSkew`
      */
 
-    const kite = _kite || syncGetKiteInstance(user)
+    const kite = _kite || syncGetKiteInstance(user, BROKER.KITE)
     const totalTime = dayjs(expiresAt).diff(startTime!)
     const remainingTime = dayjs(expiresAt).diff(dayjs())
     const timeExpired = dayjs().isAfter(dayjs(expiresAt))
@@ -180,15 +181,15 @@ export const createOrder = ({
   transactionType?: string
   productType: PRODUCT_TYPE
 }): KiteOrder => {
-  const kite = syncGetKiteInstance(user)
+  const kite = syncGetKiteInstance(user, BROKER.KITE)
   return {
     tradingsymbol: symbol,
     quantity: lotSize * lots,
-    exchange: kite.EXCHANGE_NFO,
-    transaction_type: transactionType ?? kite.TRANSACTION_TYPE_SELL,
-    order_type: kite.ORDER_TYPE_MARKET,
+    exchange: kite.kc.EXCHANGE_NFO,
+    transaction_type: transactionType ?? kite.kc.TRANSACTION_TYPE_SELL,
+    order_type: kite.kc.ORDER_TYPE_MARKET,
     product: productType,
-    validity: kite.VALIDITY_DAY,
+    validity: kite.kc.VALIDITY_DAY,
     tag: orderTag
   }
 }
@@ -219,7 +220,7 @@ async function atmStraddle ({
     }
   | undefined
 > {
-  const kite = _kite || syncGetKiteInstance(user)
+  const kite = _kite || syncGetKiteInstance(user, BROKER.KITE)
 
   const {
     underlyingSymbol,
@@ -273,7 +274,7 @@ async function atmStraddle ({
           lotSize,
           user: user!,
           orderTag: orderTag!,
-          transactionType: kite.TRANSACTION_TYPE_BUY,
+          transactionType: kite.kc.TRANSACTION_TYPE_BUY,
           productType
         })
       )
@@ -290,8 +291,8 @@ async function atmStraddle ({
         productType,
         transactionType:
           volatilityType === VOLATILITY_TYPE.SHORT
-            ? kite.TRANSACTION_TYPE_SELL
-            : kite.TRANSACTION_TYPE_BUY
+            ? kite.kc.TRANSACTION_TYPE_SELL
+            : kite.kc.TRANSACTION_TYPE_BUY
       })
     )
 
@@ -310,7 +311,7 @@ async function atmStraddle ({
           _kite: kite,
           orderProps: order,
           instrument,
-          ensureOrderState: kite.STATUS_COMPLETE,
+          ensureOrderState: kite.kc.STATUS_COMPLETE,
           user: user!
         })
       )
@@ -332,7 +333,7 @@ async function atmStraddle ({
         _kite: kite,
         orderProps: order,
         instrument,
-        ensureOrderState: kite.STATUS_COMPLETE,
+        ensureOrderState: kite.kc.STATUS_COMPLETE,
         user: user!
       })
     )

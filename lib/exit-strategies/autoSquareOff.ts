@@ -4,7 +4,7 @@ import {
   ATM_STRANGLE_TRADE,
   SUPPORTED_TRADE_CONFIG
 } from '../../types/trade'
-import { USER_OVERRIDE } from '../constants'
+import { BROKER, USER_OVERRIDE } from '../constants'
 import console from '../logging'
 import {
   // logDeep,
@@ -85,9 +85,9 @@ export async function doSquareOffPositions (
         exchange: order.exchange,
         transaction_type:
           order.quantity < 0
-            ? kite.TRANSACTION_TYPE_BUY
-            : kite.TRANSACTION_TYPE_SELL,
-        order_type: kite.ORDER_TYPE_MARKET,
+            ? kite.kc.TRANSACTION_TYPE_BUY
+            : kite.kc.TRANSACTION_TYPE_SELL,
+        order_type: kite.kc.ORDER_TYPE_MARKET,
         product: order.product,
         tag: initialJobData.orderTag
       }
@@ -96,7 +96,7 @@ export async function doSquareOffPositions (
         _kite: kite,
         orderProps: exitOrder,
         instrument: initialJobData.instrument!,
-        ensureOrderState: kite.STATUS_COMPLETE,
+        ensureOrderState: kite.kc.STATUS_COMPLETE,
         user: initialJobData.user!
       })
     })
@@ -131,7 +131,7 @@ async function autoSquareOffStrat ({
   initialJobData: SUPPORTED_TRADE_CONFIG
 }): Promise<any> {
   const { user } = initialJobData
-  const kite = syncGetKiteInstance(user)
+  const kite = syncGetKiteInstance(user, BROKER.KITE)
   const completedOrders = rawKiteOrdersResponse
 
   if (deletePendingOrders) {

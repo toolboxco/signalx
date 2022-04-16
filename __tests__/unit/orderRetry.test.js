@@ -7,7 +7,7 @@ import {
   withRemoteRetry
 } from '../../lib/utils'
 import { Promise } from 'bluebird'
-import { INSTRUMENTS } from '../../lib/constants'
+import { INSTRUMENTS, BROKER } from '../../lib/constants'
 
 jest.setTimeout(ms(60))
 
@@ -40,7 +40,7 @@ const user = JSON.parse(process.env.USER_SESSION)
 test('should return true for successful order', async () => {
   jest.setTimeout(ms(60))
 
-  const kite = syncGetKiteInstance(user)
+  const kite = syncGetKiteInstance(user, BROKER.KITE)
   expect(kite).toBeDefined()
 
   kite.placeOrder = jest.fn().mockResolvedValue({
@@ -50,14 +50,14 @@ test('should return true for successful order', async () => {
   // kite.getOrderHistory = jest.fn().mockImplementation(() =>
   //   Promise.resolve([
   //     {
-  //       status: kite.STATUS_COMPLETE
+  //       status: kite.kc.STATUS_COMPLETE
   //     }
   //   ])
   // )
 
   const ensured = await remoteOrderSuccessEnsurer({
     _kite: kite,
-    ensureOrderState: kite.STATUS_COMPLETE,
+    ensureOrderState: kite.kc.STATUS_COMPLETE,
     orderProps: {
       quantity: 200
     },
@@ -72,14 +72,14 @@ test('should return true for successful order', async () => {
   console.log(ensured)
 
   // expect(ensured).toStrictEqual({
-  //   response: { status: kite.STATUS_COMPLETE },
+  //   response: { status: kite.kc.STATUS_COMPLETE },
   //   successful: true
   // })
 })
 test('should retry 3 times for orders that after punching continue to not exist, and then throw timeout', async () => {
   jest.setTimeout(ms(60))
 
-  let kite = syncGetKiteInstance(user)
+  let kite = syncGetKiteInstance(user, BROKER.KITE)
   kite = {
     ...kite,
     placeOrder: jest.fn().mockRejectedValue({
@@ -93,7 +93,7 @@ test('should retry 3 times for orders that after punching continue to not exist,
   try {
     remoteOrderSuccessEnsurer({
       _kite: kite,
-      ensureOrderState: kite.STATUS_COMPLETE,
+      ensureOrderState: kite.kc.STATUS_COMPLETE,
       orderProps: {},
       onFailureRetryAfterMs: ms(5),
       retryAttempts: 3,
@@ -107,7 +107,7 @@ test('should retry 3 times for orders that after punching continue to not exist,
 })
 
 test('should return false when order history api check times out', async () => {
-  let kite = syncGetKiteInstance(user)
+  let kite = syncGetKiteInstance(user, BROKER.KITE)
   kite = {
     ...kite,
     placeOrder: jest.fn().mockResolvedValue({
@@ -127,7 +127,7 @@ test('should return false when order history api check times out', async () => {
   const ensured = await remoteOrderSuccessEnsurer({
     _kite: kite,
     orderProps: {},
-    ensureOrderState: kite.STATUS_COMPLETE,
+    ensureOrderState: kite.kc.STATUS_COMPLETE,
     onFailureRetryAfterMs: ms(1),
     retryAttempts: 2,
     orderStatusCheckTimeout: ms(5),
@@ -143,7 +143,7 @@ test('should return false when order history api check times out', async () => {
 })
 
 test('should handle `placeOrder` NetworkException and then find an existing completed order in broker system', async () => {
-  let kite = syncGetKiteInstance(user)
+  let kite = syncGetKiteInstance(user, BROKER.KITE)
   kite = {
     ...kite,
     placeOrder: jest.fn().mockRejectedValue({
@@ -198,7 +198,7 @@ test('should handle `placeOrder` NetworkException and then find an existing comp
       exchange: 'NFO'
     },
     remoteRetryTimeout: ms(15),
-    ensureOrderState: kite.STATUS_COMPLETE,
+    ensureOrderState: kite.kc.STATUS_COMPLETE,
     onFailureRetryAfterMs: ms(1),
     retryAttempts: 2,
     orderStatusCheckTimeout: ms(5),
@@ -212,7 +212,7 @@ test('should handle `placeOrder` NetworkException and then find an existing comp
 })
 
 test('should handle `placeOrder` NetworkException, and then successfully retry when no such order exists with broker', async () => {
-  let kite = syncGetKiteInstance(user)
+  let kite = syncGetKiteInstance(user, BROKER.KITE)
   kite = {
     ...kite,
     placeOrder: jest
@@ -256,7 +256,7 @@ test('should handle `placeOrder` NetworkException, and then successfully retry w
       transaction_type: 'SELL',
       exchange: 'NFO'
     },
-    ensureOrderState: kite.STATUS_COMPLETE,
+    ensureOrderState: kite.kc.STATUS_COMPLETE,
     onFailureRetryAfterMs: ms(1),
     retryAttempts: 2,
     orderStatusCheckTimeout: ms(5),
@@ -280,7 +280,7 @@ test('should handle `placeOrder` NetworkException, and then successfully retry a
    * 4. places another order if attemptCount < retryAttempts
    * 5. ensures this order is COMPLETE
    */
-  let kite = syncGetKiteInstance(user)
+  let kite = syncGetKiteInstance(user, BROKER.KITE)
   kite = {
     ...kite,
     placeOrder: jest
@@ -323,13 +323,13 @@ test('should handle `placeOrder` NetworkException, and then successfully retry a
       .mockImplementation(() =>
         Promise.resolve([
           {
-            status: kite.STATUS_COMPLETE
+            status: kite.kc.STATUS_COMPLETE
           }
         ])
       )
       .mockRejectedValueOnce([
         {
-          status: kite.STATUS_REJECTED
+          status: kite.kc.STATUS_REJECTED
         }
       ])
   }
@@ -346,7 +346,7 @@ test('should handle `placeOrder` NetworkException, and then successfully retry a
       transaction_type: 'SELL',
       exchange: 'NFO'
     },
-    ensureOrderState: kite.STATUS_COMPLETE,
+    ensureOrderState: kite.kc.STATUS_COMPLETE,
     onFailureRetryAfterMs: ms(1),
     retryAttempts: 2,
     orderStatusCheckTimeout: ms(5),
@@ -402,7 +402,7 @@ test('attemptBrokerOrders should work', async () => {
 })
 
 test('freeze qty should work', async () => {
-  let kite = syncGetKiteInstance(user)
+  let kite = syncGetKiteInstance(user, BROKER.KITE)
   kite = {
     ...kite,
     placeOrder: jest.fn(() =>
@@ -426,7 +426,7 @@ test('freeze qty should work', async () => {
     getOrderHistory: jest.fn().mockImplementation(() =>
       Promise.resolve([
         {
-          status: kite.STATUS_COMPLETE
+          status: kite.kc.STATUS_COMPLETE
         }
       ])
     )
@@ -445,7 +445,7 @@ test('freeze qty should work', async () => {
       transaction_type: 'SELL',
       exchange: 'NFO'
     },
-    ensureOrderState: kite.STATUS_COMPLETE,
+    ensureOrderState: kite.kc.STATUS_COMPLETE,
     onFailureRetryAfterMs: ms(1),
     retryAttempts: 2,
     orderStatusCheckTimeout: ms(5),

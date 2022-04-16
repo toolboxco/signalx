@@ -3,6 +3,7 @@ import dayjs from 'dayjs'
 import { KiteOrder } from '../../types/kite'
 import { SL_ORDER_TYPE } from '../../types/plans'
 import { DIRECTIONAL_OPTION_SELLING_TRADE } from '../../types/trade'
+import { BROKER } from '../constants'
 
 import console from '../logging'
 import { addToNextQueue, EXIT_TRADING_Q_NAME } from '../queue'
@@ -37,7 +38,7 @@ async function minXPercentOrSupertrend ({
   const { user, orderTag, slLimitPricePercent = 1, instrument } = initialJobData
   const slOrderType = SL_ORDER_TYPE.SLL
   try {
-    const kite = syncGetKiteInstance(user)
+    const kite = syncGetKiteInstance(user, BROKER.KITE)
     const [rawKiteOrderResponse] = rawKiteOrdersResponse
     // NB: rawKiteOrderResponse here is of pending SLM Order
     const orderHistory: KiteOrder[] = await withRemoteRetry(() =>
@@ -130,7 +131,7 @@ async function minXPercentOrSupertrend ({
         slOrderType === SL_ORDER_TYPE.SLL
           ? convertSlmToSll(
               {
-                transaction_type: kite.TRANSACTION_TYPE_BUY,
+                transaction_type: kite.kc.TRANSACTION_TYPE_BUY,
                 trigger_price: newSL
               } as KiteOrder,
               slLimitPricePercent!,
@@ -169,8 +170,8 @@ async function minXPercentOrSupertrend ({
             tradingsymbol: triggerPendingOrder!.tradingsymbol,
             quantity: triggerPendingOrder!.quantity,
             exchange: triggerPendingOrder!.exchange,
-            transaction_type: kite.TRANSACTION_TYPE_BUY,
-            order_type: kite.ORDER_TYPE_SLM,
+            transaction_type: kite.kc.TRANSACTION_TYPE_BUY,
+            order_type: kite.kc.ORDER_TYPE_SLM,
             product: triggerPendingOrder!.product,
             tag: orderTag!
           }

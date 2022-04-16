@@ -10,6 +10,7 @@
 
 import { Promise } from 'bluebird'
 import { SignalXUser } from '../../types/misc'
+import { BROKER } from '../constants'
 import console from '../logging'
 import {
   finiteStateChecker,
@@ -27,19 +28,19 @@ const sllWatcher = async ({
   user: SignalXUser
 }) => {
   try {
-    const kite = syncGetKiteInstance(user)
+    const kite = syncGetKiteInstance(user, BROKER.KITE)
     const orderHistory = (
       await withRemoteRetry(() => kite.getOrderHistory(sllOrderId))
     ).reverse()
     const isOrderCompleted = orderHistory.find(
-      order => order.status === kite.STATUS_COMPLETE
+      order => order.status === kite.kc.STATUS_COMPLETE
     )
     if (isOrderCompleted) {
       return Promise.resolve('[sllWatcher] order Completed!')
     }
 
     const cancelledOrder = orderHistory.find(order =>
-      order.status.includes(kite.STATUS_CANCELLED)
+      order.status.includes(kite.kc.STATUS_CANCELLED)
     )
 
     if (cancelledOrder) {
@@ -56,7 +57,7 @@ const sllWatcher = async ({
     const orderCompletionCheckerPr = orderStateChecker(
       kite,
       sllOrderId,
-      kite.STATUS_COMPLETE
+      kite.kc.STATUS_COMPLETE
     )
     try {
       await finiteStateChecker(orderCompletionCheckerPr, timeout)
@@ -73,7 +74,7 @@ const sllWatcher = async ({
         try {
           await withRemoteRetry(() =>
             kite.modifyOrder(openOrder.variety, sllOrderId, {
-              order_type: kite.ORDER_TYPE_MARKET
+              order_type: kite.kc.ORDER_TYPE_MARKET
             })
           )
           return Promise.resolve(

@@ -1,5 +1,6 @@
 import { ATM_STRANGLE_TRADE } from '../../types/trade'
 import {
+  BROKER,
   ERROR_STRINGS,
   EXPIRY_TYPE,
   INSTRUMENTS,
@@ -199,7 +200,7 @@ async function atmStrangle (args: ATM_STRANGLE_TRADE) {
       expiryType
     })
 
-    const kite = syncGetKiteInstance(user)
+    const kite = syncGetKiteInstance(user, BROKER.KITE)
 
     let allOrdersLocal: KiteOrder[] = []
     let hedgeOrdersLocal: KiteOrder[] = []
@@ -229,7 +230,7 @@ async function atmStrangle (args: ATM_STRANGLE_TRADE) {
           lotSize,
           user: user!,
           orderTag: orderTag!,
-          transactionType: kite.TRANSACTION_TYPE_BUY,
+          transactionType: kite.kc.TRANSACTION_TYPE_BUY,
           productType
         })
       )
@@ -246,8 +247,8 @@ async function atmStrangle (args: ATM_STRANGLE_TRADE) {
         productType,
         transactionType:
           volatilityType === VOLATILITY_TYPE.SHORT
-            ? kite.TRANSACTION_TYPE_SELL
-            : kite.TRANSACTION_TYPE_BUY
+            ? kite.kc.TRANSACTION_TYPE_SELL
+            : kite.kc.TRANSACTION_TYPE_BUY
       })
     )
 
@@ -264,7 +265,7 @@ async function atmStrangle (args: ATM_STRANGLE_TRADE) {
           _kite: kite,
           orderProps: order,
           instrument,
-          ensureOrderState: kite.STATUS_COMPLETE,
+          ensureOrderState: kite.kc.STATUS_COMPLETE,
           user: user!
         })
       )
@@ -286,7 +287,7 @@ async function atmStrangle (args: ATM_STRANGLE_TRADE) {
         _kite: kite,
         orderProps: order,
         instrument,
-        ensureOrderState: kite.STATUS_COMPLETE,
+        ensureOrderState: kite.kc.STATUS_COMPLETE,
         user: user!
       })
     )

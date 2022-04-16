@@ -1,5 +1,5 @@
 import dayjs from 'dayjs'
-import { INSTRUMENTS } from '../../../lib/constants'
+import { INSTRUMENTS, BROKER } from '../../../lib/constants'
 import atmStraddle from '../../../lib/strategies/atmStraddle'
 import { ms, syncGetKiteInstance } from '../../../lib/utils'
 
@@ -8,7 +8,7 @@ jest.setTimeout(ms(3 * 60))
 const user = JSON.parse(process.env.USER_SESSION)
 
 test('it should work when everything is okay', async () => {
-  let kite = syncGetKiteInstance(user)
+  let kite = syncGetKiteInstance(user, BROKER.KITE)
 
   expect(kite).toBeDefined()
 
@@ -20,7 +20,7 @@ test('it should work when everything is okay', async () => {
     getOrderHistory: jest.fn().mockImplementation(async () =>
       Promise.resolve([
         {
-          status: kite.STATUS_COMPLETE
+          status: kite.kc.STATUS_COMPLETE
         }
       ])
     )
